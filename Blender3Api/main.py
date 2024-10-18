@@ -17,7 +17,7 @@ def fetch_model(meshy_api, refine_task_id):
         # Acessar a URL do modelo 3D
         model_urls = task.model_urls
         # Se precisar de um modelo específico, como GLB, FBX, etc.
-        model_url = model_urls.get("glb")  # Substitua "glb" por "fbx", "obj", etc., conforme necessário
+        model_url = model_urls.get("obj")  # Substitua "glb" por "fbx", "obj", etc., conforme necessário
 
         if model_url is None:
             print("Model URL not found.")
@@ -28,7 +28,7 @@ def fetch_model(meshy_api, refine_task_id):
         response.raise_for_status()
 
         # Usar um diretório temporário seguro para salvar o arquivo
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".glb") as temp_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".obj") as temp_file:
             model_file = temp_file.name
             # Escrever o conteúdo no arquivo
             temp_file.write(response.content)
