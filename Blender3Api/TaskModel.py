@@ -67,12 +67,24 @@ class TextTo3DTask:
 
     @classmethod
     def from_dict(cls, data):
-        task_error = TaskError(data.get("task_error", {}).get("message", ""))
-        texture_urls = [
-            TextureUrl(url["base_color"]) for url in data.get("texture_urls", [])
-        ]
+        # Garantindo que task_error seja um TaskError válido
+        task_error_data = data.get("task_error")
+        if task_error_data and isinstance(task_error_data, dict):
+            task_error = TaskError(task_error_data.get("message", ""))
+        else:
+            task_error = TaskError()  # Cria um TaskError vazio se não houver dados
+
+        # Garantindo que texture_urls seja sempre uma lista
+        texture_urls_data = data.get("texture_urls")
+        if texture_urls_data is None:
+            texture_urls = []  # Se for None, inicializa como lista vazia
+        elif isinstance(texture_urls_data, list):
+            texture_urls = [TextureUrl(url.get("base_color", "")) for url in texture_urls_data]
+        else:
+            texture_urls = []  # Se não for uma lista, inicializa como lista vazia
+
         return cls(
-            id=data["id"],
+            id=data.get("id", ""),  # Usando string vazia como padrão se 'id' não estiver presente
             model_urls=data.get("model_urls", {}),
             prompt=data.get("prompt", ""),
             art_style=data.get("art_style", ""),
@@ -80,7 +92,7 @@ class TextTo3DTask:
             progress=data.get("progress", 0),
             started_at=data.get("started_at", 0),
             created_at=data.get("created_at", 0),
-            finished_at=data.get("finished_at", 0),
+            finished_at=data.get("finished_at", 0),  # Pode ser 0 ou None, dependendo do uso
             status=data.get("status", "PENDING"),
             task_error=task_error,
             texture_urls=texture_urls,
