@@ -59,7 +59,7 @@ class OBJ:
         self.texcoords = []
         self.faces = []
 
-        self.mtl=None
+        self.mtl = None
 
         material = None
         for line in open(fdir+filename, "r"):
@@ -85,9 +85,7 @@ class OBJ:
             elif values[0] in ('usemtl', 'usemat'):
                 material = values[1]
             elif values[0] == 'mtllib':
-                #print(values[1])
-                #self.mtl = MTL(fdir,values[1])
-                self.mtl = [fdir,values[1]]
+                self.mtl = [fdir, values[1]]
             elif values[0] == 'f':
                 face = []
                 texcoords = []
@@ -118,7 +116,7 @@ class OBJ:
     def create_gl_list(self):
         if self.mtl is not None:
             print(self.mtl, "---")
-            self.mtl = MTL( *self.mtl )
+            self.mtl = MTL(self.mtl[0], self.mtl[1])
 
         self.gl_list = glGenLists(1)
         glNewList(self.gl_list, GL_COMPILE)

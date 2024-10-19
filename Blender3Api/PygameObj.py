@@ -13,9 +13,9 @@ class Param(object):
 
 
 class ModelViewer:
-    def __init__(self, resource_dir="resource\\",  model_file="model.obj", pkl_file=""):
+    def __init__(self, resource_dir="", model_path="", pkl_file=""):
         self.resource_dir = resource_dir
-        self.model_file = model_file
+        self.model_file = model_path
         self.pkl_file = pkl_file
         self.param = Param()
         self.clock = None
@@ -149,7 +149,3 @@ class ModelViewer:
         self._setup_pygame()
         self._setup_opengl()
         self._main_loop()
-
-
-viewer = ModelViewer()
-viewer.run()
