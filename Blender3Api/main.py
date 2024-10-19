@@ -1,3 +1,4 @@
+import os
 import tempfile
 import numpy as np
 import requests
@@ -5,7 +6,7 @@ import time
 from ApiClient import MeshyAPI
 import pygame
 from OpenGL.GL import *
-from PygameObj import run
+from PygameObj import ModelViewer
 
 
 def fetch_model(meshy_api, refine_task_id):
@@ -27,11 +28,14 @@ def fetch_model(meshy_api, refine_task_id):
         response = requests.get(model_url)
         response.raise_for_status()
 
-        # Usar um diretório temporário seguro para salvar o arquivo
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".obj") as temp_file:
-            model_file = temp_file.name
-            # Escrever o conteúdo no arquivo
-            temp_file.write(response.content)
+        # Ensure the resource directory exists
+        resource_dir = "resource"
+        os.makedirs(resource_dir, exist_ok=True)
+
+        # Save the file in the resource directory
+        model_file = os.path.join(resource_dir, "model.obj")
+        with open(model_file, 'wb') as file:
+            file.write(response.content)
 
         return model_file
     except requests.exceptions.RequestException as e:
@@ -43,7 +47,8 @@ def fetch_model(meshy_api, refine_task_id):
 
 
 def display_3d_model(model_path):
-    run(model_path)
+    viewer = ModelViewer(model_path)
+    viewer.run()
 
 
 def wait_for_task_completion(meshy_api, task_id, timeout=300, check_interval=5):
