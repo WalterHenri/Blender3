@@ -23,6 +23,8 @@ class ModelViewer:
         self.screen = None
         self.obj = None
         self.cam = None
+        self.running = True
+        self.quit_button = pygame.Rect(10, 10, 100, 50)
 
     def _load_model(self):
         self.obj = OBJ(self.resource_dir, self.model_file, swapyz=False)
@@ -58,7 +60,7 @@ class ModelViewer:
         zpos = 5
         rotate = move = False
 
-        while True:
+        while self.running:
             self.clock.tick(30)
             for e in pygame.event.get():
                 if e.type == QUIT:
@@ -85,6 +87,9 @@ class ModelViewer:
                         rotate = True
                     elif e.button == 3:
                         move = True
+
+                    if self.quit_button.collidepoint(pygame.mouse.get_pos()):
+                        self.running = False
                 elif e.type == MOUSEBUTTONUP:
                     if e.button == 1:
                         rotate = False

@@ -1,6 +1,9 @@
 import pygame
 import sys
 import requests
+import threading
+import math
+import time
 from pygame.locals import *
 from ApiClient import MeshyAPI
 from PygameObj import ModelViewer
@@ -15,6 +18,7 @@ from PygameObj import ModelViewer
 
 class TextTo3DInterface:
     def __init__(self):
+        self.progress = 0
         self.screen = None
         self.width, self.height = 800, 600
         self.prompt = ""
@@ -38,6 +42,9 @@ class TextTo3DInterface:
         self.create_button = pygame.Rect(create_button_x, create_button_y, self.create_button_width,
                                          self.create_button_height)
         self.logo = None
+        self.model_ready = False
+        self.model_path = ""
+        self.loading = False
 
     def initialize_pygame(self):
         pygame.init()
@@ -98,7 +105,9 @@ class TextTo3DInterface:
                     self.active_input = 'art_style'
                     self.show_art_style_options = not self.show_art_style_options
                 elif self.create_button.collidepoint(event.pos):
-                    self.create_task()
+                    self.model_ready = False
+                    self.loading = True
+                    threading.Thread(target=self.create_task).start()
 
                 if self.show_art_style_options:
                     option_rects = self.draw_combobox()
@@ -124,6 +133,10 @@ class TextTo3DInterface:
                         self.negative_prompt += event.unicode
                 elif self.active_input == 'art_style':
                     pass
+
+    def handle_model_display(self):
+        self.model_ready = False
+        self.display_3d_model(self.model_path)
 
     def draw(self):
         self.screen.fill((30, 30, 30))
@@ -156,27 +169,72 @@ class TextTo3DInterface:
             logo_rect = self.logo.get_rect(topleft=(self.width - 120, 20))
             self.screen.blit(self.logo, logo_rect)
 
+    def loading_animation(self):
+        clock = pygame.time.Clock()
+
+        angle = 0
+        radius = 50
+        thickness = 2
+        color = (255, 255, 255)  # Branco
+
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+            # Limpar a tela
+            self.screen.fill((30, 30, 30))
+
+            # Calcular o centro do círculo
+            center_x = self.width // 2
+            center_y = self.height // 2
+
+            # Desenhar o círculo girando
+            pygame.draw.circle(self.screen, color, (center_x, center_y), radius, thickness)
+
+            # Atualizar o ângulo
+            angle += 1
+            if angle >= 360:
+                angle = 0
+
+            # Atualizar a posição do círculo
+            x = center_x + radius * math.cos(math.radians(angle))
+            y = center_y + radius * math.sin(math.radians(angle))
+
+            # Desenhar o ponto central
+            pygame.draw.circle(self.screen, (255, 0, 0), (int(x), int(y)), 5)
+
+            # Atualizar a tela
+            pygame.display.flip()
+
+            # Controlar a taxa de quadros
+            clock.tick(60)
+
     def create_task(self):
         try:
-            # apy key from mesh switch to .env for security
             meshy_api = MeshyAPI("msy_15LD1QdOqkN5fClmDDnPA7ozbcyWxfKKaAhI")
 
-            # Criar uma tarefa de preview
             preview_task_id = meshy_api.create_preview_task(
                 prompt=self.prompt,
                 art_style=self.selected_art_style,
                 negative_prompt=self.negative_prompt
             )
 
-            # Aguardar a conclusão da tarefa de preview
-            if MeshyAPI.wait_for_task_completion(meshy_api, preview_task_id):
-                # Criar uma tarefa de refinamento
+            progress = MeshyAPI.wait_for_task_completion(meshy_api, preview_task_id)
+            if progress[1]:
                 refined_task_id = meshy_api.create_refine_task(preview_task_id)
-
-                # Aguardar a conclusão da tarefa de refinamento
-                if MeshyAPI.wait_for_task_completion(meshy_api, refined_task_id):
-                    model_path = MeshyAPI.fetch_model(meshy_api, refined_task_id)
-                    self.display_3d_model(model_path)
+                refined_progress = MeshyAPI.wait_for_task_completion(meshy_api, refined_task_id)
+                if refined_progress[1]:
+                    self.model_path = MeshyAPI.fetch_model(meshy_api, refined_task_id)
+                    self.loading = False
+                    self.model_ready = True
+                else:
+                    self.progress = 50 + progress[0] / 2
+                    print("Tarefa de refinamento não concluída")
+            else:
+                self.progress = progress[0] / 2
+                print("Tarefa de preview não concluída")
 
         except requests.exceptions.RequestException as e:
             print(f"An error occurred while making the API request: {e}")

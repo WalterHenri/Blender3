@@ -17,7 +17,13 @@ def main():
 
     while running:
         interface.handle_events()
-        interface.draw()
+        if interface.model_ready:
+            interface.handle_model_display()
+        elif interface.loading:
+            interface.loading_animation()
+        else:
+            interface.draw()
+
         pygame.display.flip()
         clock.tick(60)
 

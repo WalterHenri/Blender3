@@ -124,7 +124,7 @@ class MeshyAPI:
             check_interval: Intervalo de verificação em segundos (padrão: 5 segundos).
 
         Returns:
-            Retorna True se a tarefa foi concluída, False caso contrário.
+            Retorna um tupla, progresso e True se a tarefa foi concluída, False caso contrário.
         """
         start_time = time.time()
         while time.time() - start_time < timeout:
@@ -133,10 +133,10 @@ class MeshyAPI:
 
             if status == "SUCCEEDED":
                 print(f"Task {task_id} completed successfully.")
-                return True
+                return task_info.progress, True
             elif status == "FAILED":
                 print(f"Task {task_id} failed.")
-                return False
+                return task_info.progress, False
 
             # Aguardando antes de verificar novamente
             time.sleep(check_interval)
