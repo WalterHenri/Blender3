@@ -23,6 +23,12 @@ class ModelViewer:
         self.screen = None
         self.obj = None
         self.cam = None
+        self.running = False
+        self.voltar_width = 250
+        self.voltar_height = 60
+        self.voltar_x = 50
+        self.voltar_y = 50
+        self.voltar_button = pygame.Rect(self.voltar_x, self.voltar_y, self.voltar_width, self.voltar_height)
 
     def _load_model(self):
         self.obj = OBJ(self.resource_dir, self.model_file, swapyz=False)
@@ -58,7 +64,7 @@ class ModelViewer:
         zpos = 5
         rotate = move = False
 
-        while True:
+        while self.running:
             self.clock.tick(30)
             for e in pygame.event.get():
                 if e.type == QUIT:
@@ -71,6 +77,8 @@ class ModelViewer:
                         self.param.sel_pos = not self.param.sel_pos
 
                 elif e.type == MOUSEBUTTONDOWN:
+                    if self.voltar_button.collidepoint(e.pos):
+                        self.running = False
                     pressed_array = pygame.mouse.get_pressed()
                     if pressed_array[0]:
                         if self.param.sel_pos:
@@ -117,6 +125,12 @@ class ModelViewer:
             if hasattr(self.param, 'pos3d') and self.param.sel_pos:
                 self.draw_pos(self.param.pos3d)
 
+            pygame.draw.rect(self.screen, (0, 150, 255), self.voltar_button, border_radius=10)
+            font = pygame.font.Font(None, 36)
+            text = font.render("Voltar", True, (255, 255, 255))
+            text_rect = text.get_rect(center=self.voltar_button.center)
+            self.screen.blit(text, text_rect)
+
             pygame.display.flip()
 
     def pos_get_pos3d(self, pos):
@@ -148,4 +162,5 @@ class ModelViewer:
         self._load_model()
         self._setup_pygame()
         self._setup_opengl()
+        self.running = True
         self._main_loop()

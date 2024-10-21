@@ -63,8 +63,7 @@ class MeshyAPI:
 
             # Acessar a URL do modelo 3D
             model_urls = task.model_urls
-            # Se precisar de um modelo específico, como GLB, FBX, etc.
-            model_url = model_urls.get("obj")  # Substitua "glb" por "fbx", "obj", etc., conforme necessário
+            model_url = model_urls.get("obj")
             mtl_url = model_urls.get("mtl")
             texture_img = task.texture_urls[0]
 
